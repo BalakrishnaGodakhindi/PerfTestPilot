@@ -19,9 +19,12 @@ const GenerateTestCasesInputSchema = z.object({
 export type GenerateTestCasesInput = z.infer<typeof GenerateTestCasesInputSchema>;
 
 const GenerateTestCasesOutputSchema = z.object({
-  testCases: z
+  jmeterScript: z
     .string()
     .describe('Generated JMeter script in XML format.'),
+  testCases: z
+    .string()
+    .describe('Generated performance test cases in a human-readable format (e.g., Markdown).'),
 });
 export type GenerateTestCasesOutput = z.infer<typeof GenerateTestCasesOutputSchema>;
 
@@ -33,11 +36,15 @@ const prompt = ai.definePrompt({
   name: 'generateTestCasesPrompt',
   input: {schema: GenerateTestCasesInputSchema},
   output: {schema: GenerateTestCasesOutputSchema},
-  prompt: `You are an expert performance test case generator. Your task is to create a valid JMeter test plan (.jmx file) in XML format based on the provided Swagger/OpenAPI documentation.
+  prompt: `You are an expert performance test case generator. Your tasks are:
+1.  Create a list of human-readable performance test cases in Markdown format.
+2.  Create a valid JMeter test plan (.jmx file) in XML format.
 
-The output MUST be a single, valid XML string, starting with \`<?xml version="1.0" encoding="UTF-8"?>\`. Do not include any other text, explanations, or markdown formatting before or after the XML content.
+Both tasks should be based on the provided Swagger/OpenAPI documentation.
 
-Analyze the following API documentation and generate a comprehensive JMeter script.
+For the JMeter script, the output MUST be a single, valid XML string, starting with \`<?xml version="1.0" encoding="UTF-8"?>\`. Do not include any other text, explanations, or markdown formatting before or after the XML content.
+
+Analyze the following API documentation and generate both the test cases and the JMeter script.
 
 API Documentation:
 {{swaggerDoc}}`,

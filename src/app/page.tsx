@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2, BookUser, Settings, ChevronDown } from 'lucide-react';
+import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2, BookUser, Settings, ChevronDown, FileCode, ListChecks } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,11 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { GenerateTestCasesOutput } from '@/ai/flows/generate-test-cases';
 
 export default function Home() {
   const [swaggerDoc, setSwaggerDoc] = React.useState<string>('');
   const [fileName, setFileName] = React.useState<string>('');
-  const [generatedResult, setGeneratedResult] = React.useState<string>('');
+  const [generatedResult, setGeneratedResult] = React.useState<GenerateTestCasesOutput | null>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [isDragOver, setIsDragOver] = React.useState<boolean>(false);
   const { toast } = useToast();
@@ -42,7 +44,7 @@ export default function Home() {
         const content = e.target?.result as string;
         setSwaggerDoc(content);
         setFileName(file.name);
-        setGeneratedResult('');
+        setGeneratedResult(null);
       };
       reader.onerror = () => {
         toast({
@@ -86,7 +88,7 @@ export default function Home() {
     }
 
     setIsLoading(true);
-    setGeneratedResult('');
+    setGeneratedResult(null);
     
     const result = await generateTestCasesAction({ swaggerDoc });
     
@@ -108,9 +110,9 @@ export default function Home() {
   };
 
   const handleDownload = () => {
-    if (!generatedResult) return;
+    if (!generatedResult?.jmeterScript) return;
 
-    const blob = new Blob([generatedResult], { type: 'text/xml' });
+    const blob = new Blob([generatedResult.jmeterScript], { type: 'text/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -128,7 +130,7 @@ export default function Home() {
       const text = await response.text();
       setSwaggerDoc(text);
       setFileName(name);
-      setGeneratedResult('');
+      setGeneratedResult(null);
       toast({
         title: `Loaded ${name}`,
         description: 'You can now generate test cases.',
@@ -251,41 +253,72 @@ export default function Home() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-headline">
                 <ClipboardList className="h-6 w-6" />
-                Generated Test Cases
+                Generated Assets
               </CardTitle>
               <CardDescription>
-                AI-generated test cases and JMeter script structure will be displayed below.
+                AI-generated test cases and JMeter scripts will be displayed below.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1">
-              <ScrollArea className="h-full max-h-[500px] w-full rounded-md border bg-muted/20 p-4 font-code">
-                {isLoading && !generatedResult && (
-                  <div className="space-y-4">
-                    <Skeleton className="h-6 w-1/2" />
-                    <div className="space-y-2 mt-4">
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-5/6" />
-                    </div>
-                  </div>
-                )}
-                {!isLoading && !generatedResult && (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
-                    <p className="text-muted-foreground">Your generated test cases will appear here.</p>
-                    <p className="text-sm text-muted-foreground">Upload your API docs and let the magic happen ✨</p>
-                  </div>
-                )}
-                {generatedResult && (
-                  <pre className="text-sm whitespace-pre-wrap break-words">
-                    <code>{generatedResult}</code>
-                  </pre>
-                )}
-              </ScrollArea>
+            <CardContent className="flex-1 flex flex-col">
+             <Tabs defaultValue="test-cases" className="flex-1 flex flex-col">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="test-cases"><ListChecks className="mr-2" />Test Cases</TabsTrigger>
+                  <TabsTrigger value="jmeter-script"><FileCode className="mr-2" />JMeter Script</TabsTrigger>
+                </TabsList>
+                <TabsContent value="test-cases" className="flex-1 overflow-y-auto">
+                    <ScrollArea className="h-full max-h-[500px] w-full rounded-md border bg-muted/20 p-4 font-code">
+                        {isLoading && !generatedResult && (
+                          <div className="space-y-4">
+                            <Skeleton className="h-6 w-1/2" />
+                            <div className="space-y-2 mt-4">
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-full" />
+                              <Skeleton className="h-4 w-3/4" />
+                            </div>
+                          </div>
+                        )}
+                        {!isLoading && !generatedResult?.testCases && (
+                          <div className="flex flex-col items-center justify-center h-full text-center">
+                            <p className="text-muted-foreground">Your generated test cases will appear here.</p>
+                          </div>
+                        )}
+                        {generatedResult?.testCases && (
+                          <pre className="text-sm whitespace-pre-wrap break-words">
+                            <code>{generatedResult.testCases}</code>
+                          </pre>
+                        )}
+                    </ScrollArea>
+                </TabsContent>
+                <TabsContent value="jmeter-script" className="flex-1 overflow-y-auto">
+                   <ScrollArea className="h-full max-h-[500px] w-full rounded-md border bg-muted/20 p-4 font-code">
+                    {isLoading && !generatedResult && (
+                      <div className="space-y-4">
+                        <Skeleton className="h-6 w-1/2" />
+                        <div className="space-y-2 mt-4">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-5/6" />
+                        </div>
+                      </div>
+                    )}
+                    {!isLoading && !generatedResult?.jmeterScript && (
+                      <div className="flex flex-col items-center justify-center h-full text-center">
+                        <p className="text-muted-foreground">Your generated JMeter script will appear here.</p>
+                      </div>
+                    )}
+                    {generatedResult?.jmeterScript && (
+                      <pre className="text-sm whitespace-pre-wrap break-words">
+                        <code>{generatedResult.jmeterScript}</code>
+                      </pre>
+                    )}
+                  </ScrollArea>
+                </TabsContent>
+              </Tabs>
             </CardContent>
             <CardFooter>
-              <Button onClick={handleDownload} disabled={!generatedResult || isLoading} size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Button onClick={handleDownload} disabled={!generatedResult?.jmeterScript || isLoading} size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Download className="mr-2 h-5 w-5" />
                 Download JMeter Script
               </Button>
