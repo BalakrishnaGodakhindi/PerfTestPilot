@@ -258,7 +258,7 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
-              <ScrollArea className="h-full max-h-[500px] w-full rounded-md border p-4">
+              <ScrollArea className="h-full max-h-[500px] w-full rounded-md border bg-muted/20 p-4 font-code">
                 {isLoading && !generatedResult && (
                   <div className="space-y-4">
                     <Skeleton className="h-6 w-1/2" />
@@ -300,5 +300,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

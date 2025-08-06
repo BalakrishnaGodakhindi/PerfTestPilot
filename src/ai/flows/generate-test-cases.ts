@@ -21,7 +21,7 @@ export type GenerateTestCasesInput = z.infer<typeof GenerateTestCasesInputSchema
 const GenerateTestCasesOutputSchema = z.object({
   testCases: z
     .string()
-    .describe('Generated performance test cases and JMeter script suggestions.'),
+    .describe('Generated JMeter script in XML format.'),
 });
 export type GenerateTestCasesOutput = z.infer<typeof GenerateTestCasesOutputSchema>;
 
@@ -33,10 +33,14 @@ const prompt = ai.definePrompt({
   name: 'generateTestCasesPrompt',
   input: {schema: GenerateTestCasesInputSchema},
   output: {schema: GenerateTestCasesOutputSchema},
-  prompt: `You are an expert performance test case generator.
-  Based on the provided Swagger API documentation, generate performance test cases and suggest JMeter script structures. Use the following documentation:
+  prompt: `You are an expert performance test case generator. Your task is to create a valid JMeter test plan (.jmx file) in XML format based on the provided Swagger/OpenAPI documentation.
 
-  {{swaggerDoc}}`,
+The output MUST be a single, valid XML string, starting with \`<?xml version="1.0" encoding="UTF-8"?>\`. Do not include any other text, explanations, or markdown formatting before or after the XML content.
+
+Analyze the following API documentation and generate a comprehensive JMeter script.
+
+API Documentation:
+{{swaggerDoc}}`,
 });
 
 const generateTestCasesFlow = ai.defineFlow(
