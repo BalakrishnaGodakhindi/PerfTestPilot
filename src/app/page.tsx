@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2 } from 'lucide-react';
+import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2, BookUser } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -113,6 +113,30 @@ export default function Home() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
+  
+  const loadExample = async (filePath: string, name: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(filePath);
+      const text = await response.text();
+      setSwaggerDoc(text);
+      setFileName(name);
+      setGeneratedResult('');
+      toast({
+        title: `Loaded ${name}`,
+        description: 'You can now generate test cases.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Failed to load example',
+        description: 'Please check the console for more details.',
+      });
+      console.error('Failed to load example swagger:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -137,7 +161,7 @@ export default function Home() {
                 API Documentation
               </CardTitle>
               <CardDescription>
-                Upload your Swagger 2.0 or OpenAPI 3.0 documentation to begin.
+                Upload your Swagger 2.0 or OpenAPI 3.0 documentation to begin, or use one of the examples.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col gap-4">
@@ -167,12 +191,24 @@ export default function Home() {
                   </div>
                 </label>
               
+              <div className="flex flex-col sm:flex-row gap-2">
+                  <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/petstore.json', 'Pet Store API')}>
+                    <BookUser className="mr-2 h-4 w-4" /> Load PetStore Example
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/user-management.json', 'User Management API')}>
+                     <BookUser className="mr-2 h-4 w-4" /> Load User API Example
+                  </Button>
+                   <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/ecommerce.json', 'E-commerce API')}>
+                     <BookUser className="mr-2 h-4 w-4" /> Load E-commerce Example
+                  </Button>
+              </div>
+
               {fileName && <p className="text-sm text-muted-foreground">Uploaded: <span className="font-medium text-foreground">{fileName}</span></p>}
               
               <ScrollArea className="flex-1 h-64 md:h-auto border rounded-md bg-muted/20">
                 <Textarea
                   value={swaggerDoc}
-                  readOnly
+                  onChange={(e) => setSwaggerDoc(e.target.value)}
                   placeholder="Your uploaded document content will appear here..."
                   className="w-full h-full min-h-[300px] bg-transparent border-0 focus-visible:ring-0"
                 />
@@ -202,7 +238,7 @@ export default function Home() {
             </CardHeader>
             <CardContent className="flex-1">
               <ScrollArea className="h-full max-h-[500px] w-full rounded-md border p-4">
-                {isLoading && (
+                {isLoading && !generatedResult && (
                   <div className="space-y-4">
                     <Skeleton className="h-6 w-1/2" />
                     <div className="space-y-2 mt-4">
@@ -220,7 +256,7 @@ export default function Home() {
                     <p className="text-sm text-muted-foreground">Upload your API docs and let the magic happen ✨</p>
                   </div>
                 )}
-                {!isLoading && generatedResult && (
+                {generatedResult && (
                   <pre className="text-sm whitespace-pre-wrap break-words">
                     <code>{generatedResult}</code>
                   </pre>
