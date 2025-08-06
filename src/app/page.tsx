@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from 'react';
-import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2, BookUser } from 'lucide-react';
+import { UploadCloud, FileText, ClipboardList, Sparkles, Download, Loader2, TestTube2, BookUser, Settings, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { generateTestCasesAction } from './actions';
+import { SettingsDialog } from '@/components/settings-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function Home() {
   const [swaggerDoc, setSwaggerDoc] = React.useState<string>('');
@@ -140,14 +147,17 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="py-6">
-        <div className="container mx-auto flex items-center justify-center gap-2">
-           <TestTube2 className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold font-headline text-center">
-            PerfTest Pilot
-          </h1>
+      <header className="py-4 px-4 sm:px-6">
+        <div className="container mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+                <TestTube2 className="h-8 w-8 text-primary" />
+                <h1 className="text-3xl font-bold font-headline">
+                    PerfTest Pilot
+                </h1>
+            </div>
+            <SettingsDialog />
         </div>
-        <p className="text-center text-muted-foreground mt-2">
+        <p className="container mx-auto text-muted-foreground mt-2">
           AI-powered performance test case and JMeter script generation from your API docs.
         </p>
       </header>
@@ -191,16 +201,27 @@ export default function Home() {
                   </div>
                 </label>
               
-              <div className="flex flex-col sm:flex-row gap-2">
-                  <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/petstore.json', 'Pet Store API')}>
-                    <BookUser className="mr-2 h-4 w-4" /> Load PetStore Example
-                  </Button>
-                  <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/user-management.json', 'User Management API')}>
-                     <BookUser className="mr-2 h-4 w-4" /> Load User API Example
-                  </Button>
-                   <Button variant="outline" className="w-full" onClick={() => loadExample('/examples/ecommerce.json', 'E-commerce API')}>
-                     <BookUser className="mr-2 h-4 w-4" /> Load E-commerce Example
-                  </Button>
+              <div className="flex items-center justify-center">
+                 <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <BookUser className="mr-2 h-4 w-4" />
+                      Load Example
+                      <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => loadExample('/examples/petstore.json', 'Pet Store API')}>
+                      Pet Store API
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => loadExample('/examples/user-management.json', 'User Management API')}>
+                      User Management API
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => loadExample('/examples/ecommerce.json', 'E-commerce API')}>
+                      E-commerce API
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {fileName && <p className="text-sm text-muted-foreground">Uploaded: <span className="font-medium text-foreground">{fileName}</span></p>}
@@ -279,3 +300,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
